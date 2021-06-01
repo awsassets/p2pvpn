@@ -9,6 +9,7 @@ import (
 	"github.com/lp2p/p2pvpn/engine"
 	"github.com/lp2p/p2pvpn/log"
 )
+
 var key = new(engine.Key)
 
 func init() {
