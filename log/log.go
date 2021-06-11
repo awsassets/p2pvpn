@@ -2,7 +2,8 @@
 package log
 
 import (
-	logging "github.com/ipfs/go-log"
+	logging "github.com/ipfs/go-log/v2"
+	"go.uber.org/zap"
 )
 
 var (
@@ -15,7 +16,10 @@ func init() {
 }
 
 func Logger(system string) *logging.ZapEventLogger {
-	return logging.Logger(system)
+	logger := logging.Logger(system)
+	tmpLogger := logger.SugaredLogger.Desugar().WithOptions(zap.AddCallerSkip(1)).Sugar()
+	logger.SugaredLogger = *tmpLogger
+	return logger
 }
 
 func SetAllLoggers(lvl logging.LogLevel) {
