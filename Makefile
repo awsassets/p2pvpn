@@ -12,6 +12,8 @@ LDFLAGS += -w -s -buildid=
 GO_BUILD = GO111MODULE=$(GO111MODULE) CGO_ENABLED=$(CGO_ENABLED) \
 	go build $(BUILD_FLAGS) -ldflags '$(LDFLAGS)' -trimpath
 
+all: client server
+
 client:
 	$(GO_BUILD) -o $(BUILD_DIR)/$(PREFIX)-$@ cmd/$@/main.go
 
