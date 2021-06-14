@@ -1,10 +1,16 @@
 package engine
 
 import (
+	gocontext "context"
 	"errors"
 	"net"
+	"strconv"
 
+	"github.com/libp2p/go-libp2p-core/network"
+	"github.com/libp2p/go-libp2p-core/peer"
+	"github.com/lp2p/p2pvpn/constant"
 	"github.com/lp2p/p2pvpn/context"
+	"github.com/lp2p/p2pvpn/core"
 	"github.com/lp2p/p2pvpn/log"
 	"github.com/lp2p/p2pvpn/transport/socks5"
 	"github.com/lp2p/p2pvpn/tunnel"
@@ -28,7 +34,8 @@ func Insert(k *Key) {
 }
 
 type Key struct {
-	SocksAddr string
+	SocksAddr  string
+	ServerAddr string
 }
 
 type engine struct {
@@ -42,6 +49,7 @@ func (e *engine) start() error {
 
 	for _, f := range []func() error{
 		e.initSocks,
+		e.initP2PHost,
 	} {
 		if err := f(); err != nil {
 			return err
@@ -85,10 +93,60 @@ func (e *engine) initSocks() error {
 					_ = c.SetKeepAlive(true)
 				}
 
-				tunnel.Add(context.ConnContext{Addr: &tcpAddr{target.String()}, Conn: conn})
+				/*
+					HOOK DEST PEER
+				*/
+				var dest peer.ID
+
+				stream, err := core.Host().NewStream(gocontext.Background(), dest, constant.Protocol)
+				// If an error happens, we write an error for response.
+				if err != nil {
+					log.Warnf("Starting new stream failed: %v", err)
+					return
+				}
+
+				log.Infof("New stream connection: %s <--> %s", conn.RemoteAddr(), stream.ID())
+
+				defer conn.Close()
+				defer stream.Close()
+
+				stream.Write(target)
+				tunnel.Relay(conn, stream)
 			}()
 		}
 	}()
+
+	return nil
+}
+
+func (e *engine) initP2PHost() error {
+	host, port, err := net.SplitHostPort(e.ServerAddr)
+	if err != nil {
+		return err
+	}
+	portInt, _ := strconv.Atoi(port)
+
+	h := core.InitHost(host, portInt)
+
+	// We let our host know that it needs to handle streams tagged with the
+	// protocol id that we have defined, and then handle them to
+	// our own streamHandling function.
+	h.SetStreamHandler(constant.Protocol, func(stream network.Stream) {
+		buf := make([]byte, socks5.MaxAddrLen)
+
+		addr, err := socks5.ReadAddr(stream, buf)
+		if err != nil {
+			log.Warnf("Read address failed: %v", err)
+			return
+		}
+
+		tunnel.Add(context.ConnContext{Addr: &tcpAddr{addr.String()}, Conn: stream})
+	})
+
+	log.Infof("Peer host is listening at:")
+	for _, a := range h.Addrs() {
+		log.Infof("%s/%s\n", a, peer.Encode(h.ID()))
+	}
 
 	return nil
 }

@@ -14,6 +14,7 @@ var key = new(engine.Key)
 
 func init() {
 	flag.StringVar(&key.SocksAddr, "socks-addr", "", "socks addr to bind")
+	flag.StringVar(&key.ServerAddr, "server-addr", "", "server addr to complete handshake")
 	flag.Parse()
 }
 
