@@ -3,17 +3,17 @@ package core
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/libp2p/go-libp2p"
 	circuit "github.com/libp2p/go-libp2p-circuit"
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/routing"
+	"github.com/lp2p/p2pvpn/api/route"
 	"github.com/lp2p/p2pvpn/common/utils"
 	"github.com/lp2p/p2pvpn/log"
-	"github.com/lp2p/p2pvpn/route"
 	ma "github.com/multiformats/go-multiaddr"
 	manet "github.com/multiformats/go-multiaddr/net"
-	"strings"
 )
 
 var _host host.Host = nil

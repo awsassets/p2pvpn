@@ -2,8 +2,8 @@ package core
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/lp2p/p2pvpn/api/route"
 	"github.com/lp2p/p2pvpn/constant"
-	"github.com/lp2p/p2pvpn/route"
 	"net/http"
 	"strings"
 )
