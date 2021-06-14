@@ -34,16 +34,19 @@ func connect(a, b host.Host) {
 	}
 }
 
-func TestRemoteRoute(t *testing.T) {
-	log.SetAllLoggers(logging.LevelWarn)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
+func initApiServer() {
 	router := gin.New()
 	tab := route.NewRouteTable()
 	api := core.NewAPIService(router, tab, ":8000")
 	go api.Run()
+}
 
+func TestRouteRelay(t *testing.T) {
+	log.SetAllLoggers(logging.LevelWarn)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	initApiServer()
 	server := "http://127.0.0.1:8000"
 
 	h1, err := libp2p.New(ctx, libp2p.EnableRelay())
@@ -147,5 +150,35 @@ func TestRemoteRoute(t *testing.T) {
 
 	if !haveRelay {
 		t.Fatal("No relay addrs pushed")
+	}
+}
+
+func TestConnectByID(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	initApiServer()
+	server := "http://127.0.0.1:8000"
+
+	h1, err := libp2p.New(ctx,
+		libp2p.Routing(route.MakeRouting(server, "client")),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	h2, err := libp2p.New(ctx,
+		libp2p.Routing(route.MakeRouting(server, "client")))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	h2Info := peer.AddrInfo{
+		ID: h2.ID(),
+	}
+
+	err = h1.Connect(ctx, h2Info)
+	if err != nil {
+		t.Fatal(err)
 	}
 }
