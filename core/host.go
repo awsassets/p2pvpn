@@ -3,12 +3,12 @@ package core
 import (
 	"context"
 	"fmt"
+	"github.com/libp2p/go-libp2p/p2p/host/relay"
 	"strings"
 
 	"github.com/libp2p/go-libp2p"
 	circuit "github.com/libp2p/go-libp2p-circuit"
 	"github.com/libp2p/go-libp2p-core/host"
-	"github.com/libp2p/go-libp2p-core/routing"
 	"github.com/lp2p/p2pvpn/api/route"
 	"github.com/lp2p/p2pvpn/common/utils"
 	"github.com/lp2p/p2pvpn/log"
@@ -33,19 +33,15 @@ func InitHost(address string, port int) host.Host {
 }
 
 // NewServerHost creates a libp2p host as relay.
-func NewServerHost(addr string, port int) host.Host {
-	var router routing.PeerRouting
-	makeRouting := func(h host.Host) (routing.PeerRouting, error) {
-		router = route.NewRoute(h, "http://127.0.0.1:8000")
-		return router, nil
-	}
+func NewServerHost(addr string, port int, apiPort int) host.Host {
+	server := fmt.Sprintf("http://127.0.0.1:%d", apiPort)
 
 	publicIP := utils.GetPublicIP()
 
 	h, err := libp2p.New(context.Background(),
 		libp2p.ListenAddrStrings(fmt.Sprintf("/ip4/%s/tcp/%d", addr, port)),
 		libp2p.EnableRelay(circuit.OptHop),
-		libp2p.Routing(makeRouting),
+		libp2p.Routing(route.MakeRouting(server, relay.RelayRendezvous)),
 		libp2p.EnableAutoRelay(),
 		libp2p.AddrsFactory(func(addrs []ma.Multiaddr) []ma.Multiaddr {
 			hasPublicIP := false

@@ -29,7 +29,7 @@ func main() {
 
 	api := core.NewDefaultAPIService(fmt.Sprintf(":%d", *apiPort))
 	go api.Run()
-	go core.NewServerHost(*addr, *p2pPort)
+	go core.NewServerHost(*addr, *p2pPort, *apiPort)
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)

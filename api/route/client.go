@@ -34,13 +34,13 @@ type StatusResp struct {
 
 // ProvidersResp receives FindProvidersAsync response.
 type ProvidersResp struct {
-	StatusResp
+	Status    bool                     `json:"status"`
 	AddrInfos map[string]peer.AddrInfo `json:"addr_infos,omitempty"`
 }
 
 // PeerResp receives FindPeer response
 type PeerResp struct {
-	StatusResp
+	Status   bool          `json:"status"`
 	AddrInfo peer.AddrInfo `json:"addr_info,omitempty"`
 }
 
