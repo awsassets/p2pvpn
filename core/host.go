@@ -3,12 +3,12 @@ package core
 import (
 	"context"
 	"fmt"
-	"github.com/libp2p/go-libp2p/p2p/host/relay"
 	"strings"
 
 	"github.com/libp2p/go-libp2p"
 	circuit "github.com/libp2p/go-libp2p-circuit"
 	"github.com/libp2p/go-libp2p-core/host"
+	"github.com/libp2p/go-libp2p/p2p/host/relay"
 	"github.com/lp2p/p2pvpn/api/route"
 	"github.com/lp2p/p2pvpn/common/utils"
 	"github.com/lp2p/p2pvpn/log"

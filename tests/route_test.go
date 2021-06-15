@@ -2,6 +2,10 @@ package tests
 
 import (
 	"context"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/libp2p/go-libp2p"
@@ -15,9 +19,6 @@ import (
 	"github.com/lp2p/p2pvpn/core"
 	"github.com/lp2p/p2pvpn/log"
 	ma "github.com/multiformats/go-multiaddr"
-	"strings"
-	"testing"
-	"time"
 )
 
 func init() {
