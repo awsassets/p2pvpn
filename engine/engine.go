@@ -4,16 +4,15 @@ import (
 	gocontext "context"
 	"encoding/json"
 	"errors"
-	"github.com/lp2p/p2pvpn/api/route"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
-	"strings"
 
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
+	"github.com/lp2p/p2pvpn/api/route"
 	"github.com/lp2p/p2pvpn/constant"
 	"github.com/lp2p/p2pvpn/context"
 	"github.com/lp2p/p2pvpn/log"
@@ -166,13 +165,13 @@ func (e *engine) initP2PHost() error {
 
 // newStream creates a stream between e.host and target peer.
 func (e *engine) newStream(target socks5.Addr) (network.Stream, error) {
-	targetStr := strings.Split(target.String(), ":")[0]
+	targetStr, _, _ := net.SplitHostPort(target.String())
 	resp, err := http.Get("http://" + e.ServerAddr + constant.FingerprintsUrl + targetStr)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := ioutil.ReadAll(resp.Body)
+	res, err := io.ReadAll(resp.Body)
 	var respPtr route.IDResp
 	err = json.Unmarshal(res, &respPtr)
 	if err != nil {
