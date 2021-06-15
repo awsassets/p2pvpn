@@ -4,6 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"strings"
+
 	"github.com/ipfs/go-cid"
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/peer"
@@ -12,11 +17,6 @@ import (
 	"github.com/lp2p/p2pvpn/common/utils"
 	"github.com/lp2p/p2pvpn/constant"
 	"github.com/lp2p/p2pvpn/log"
-	"io"
-	"io/ioutil"
-	"net/http"
-	"net/url"
-	"strings"
 )
 
 // httpClient uses to do send requests.
@@ -65,7 +65,7 @@ func (r *Route) FindPeer(ctx context.Context, p peer.ID) (peer.AddrInfo, error) 
 		return peer.AddrInfo{}, err
 	}
 
-	res, err := ioutil.ReadAll(resp.Body)
+	res, err := io.ReadAll(resp.Body)
 	var respPtr PeerResp
 	err = json.Unmarshal(res, &respPtr)
 	if err != nil {
@@ -98,7 +98,7 @@ func (r *Route) Provide(ctx context.Context, cid cid.Cid, bcast bool) error {
 		return err
 	}
 
-	res, err := ioutil.ReadAll(resp.Body)
+	res, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func (r *Route) FindProvidersAsync(ctx context.Context, cid cid.Cid, limit int) 
 			log.Errorf("%v", err)
 		}
 
-		res, err := ioutil.ReadAll(resp.Body)
+		res, err := io.ReadAll(resp.Body)
 		if err != nil {
 			log.Errorf("%v", err)
 		}

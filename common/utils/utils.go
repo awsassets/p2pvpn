@@ -1,13 +1,13 @@
 package utils
 
 import (
+	"io"
+	"net/http"
+	"strings"
+
 	"github.com/ipfs/go-cid"
 	"github.com/lp2p/p2pvpn/log"
 	mh "github.com/multiformats/go-multihash"
-	"io"
-	"io/ioutil"
-	"net/http"
-	"strings"
 )
 
 // StrToCid transform string to cid.Cid.
@@ -34,7 +34,7 @@ func GetPublicIP() string {
 		}
 	}(response.Body)
 
-	body, _ := ioutil.ReadAll(response.Body)
+	body, _ := io.ReadAll(response.Body)
 	ip := string(body)
 	ip = strings.TrimRight(ip, "\n")
 	return ip
