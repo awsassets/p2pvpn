@@ -1,8 +1,8 @@
 PREFIX := p2pvpn
 MODULE := github.com/lp2p/p2pvpn
 
-BUILD_DIR     := build
-BUILD_FLAGS   := -v
+BUILD_DIR   := build
+BUILD_FLAGS := -v
 
 CGO_ENABLED := 0
 GO111MODULE := on
