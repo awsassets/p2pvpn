@@ -39,6 +39,7 @@ func (a *APIService) RegisterHandler() {
 	a.router.GET(constant.RoutingUrl+":id", a.GetNode)
 	a.router.POST(constant.RoutingUrl+":cid", a.NewNode)
 	a.router.GET(constant.RoutingProviderUrl+":cid", a.GetProvider)
+	a.router.GET(constant.FingerprintsUrl+":fingerprint", a.FindPeerID)
 }
 
 // GetNode returns node information by node id.
@@ -65,6 +66,7 @@ func (a *APIService) GetNode(c *gin.Context) {
 func (a *APIService) NewNode(c *gin.Context) {
 	addrs := c.PostForm("addrs")
 	cid := c.Param("cid")
+	fingerprint := c.PostForm("fingerprint")
 	id, err := peer.Decode(c.PostForm("id"))
 	if err != nil {
 		falseResponse(c)
@@ -74,7 +76,7 @@ func (a *APIService) NewNode(c *gin.Context) {
 	publicAddr := strings.Split(c.Request.RemoteAddr, ":")
 	strings.Replace(addrs, "127.0.0.1", publicAddr[0], 1)
 
-	err = a.tab.Provide(cid, id, addrs)
+	err = a.tab.Provide(cid, id, addrs, fingerprint)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, route.StatusResp{
 			Status: false,
@@ -100,6 +102,14 @@ func (a *APIService) GetProvider(c *gin.Context) {
 			AddrInfos: pmap,
 		})
 	}
+}
+
+func (a *APIService) FindPeerID(c *gin.Context) {
+	fingerprint := c.Param("fingerprint")
+	id := a.tab.FindPeerID(fingerprint)
+	c.JSON(http.StatusOK, route.IDResp{
+		PeerID: id,
+	})
 }
 
 // Run starts api service.

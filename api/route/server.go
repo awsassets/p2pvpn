@@ -9,13 +9,17 @@ import (
 )
 
 type RouteTable struct {
-	mx        sync.Mutex
-	providers map[string]map[string]peer.AddrInfo
-	peers     map[peer.ID]peer.AddrInfo
+	mx           sync.Mutex
+	providers    map[string]map[string]peer.AddrInfo
+	peers        map[peer.ID]peer.AddrInfo
+	fingerprints map[string]peer.ID
 }
 
 func NewRouteTable() *RouteTable {
-	return &RouteTable{providers: make(map[string]map[string]peer.AddrInfo)}
+	return &RouteTable{
+		providers:    make(map[string]map[string]peer.AddrInfo),
+		fingerprints: make(map[string]peer.ID),
+	}
 }
 
 // parseAddrInfoHack parses addrs string to peer.AddrInfo
@@ -50,7 +54,7 @@ func (r *RouteTable) Find(id peer.ID) (peer.AddrInfo, error) {
 	return pi, nil
 }
 
-func (r *RouteTable) Provide(cid string, id peer.ID, addrs string) error {
+func (r *RouteTable) Provide(cid string, id peer.ID, addrs, fingerprint string) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 	pmap, ok := r.providers[cid]
@@ -67,6 +71,9 @@ func (r *RouteTable) Provide(cid string, id peer.ID, addrs string) error {
 	// so we save it as string.
 	idStr := id.String()
 	pmap[idStr] = pi
+
+	r.fingerprints[fingerprint] = id
+
 	if r.peers == nil {
 		r.peers = make(map[peer.ID]peer.AddrInfo)
 	}
@@ -81,4 +88,12 @@ func (r *RouteTable) FindProvider(provider string) (map[string]peer.AddrInfo, er
 		return nil, fmt.Errorf("provider not found")
 	}
 	return pmap, nil
+}
+
+func (r *RouteTable) FindPeerID(fingerprint string) peer.ID {
+	id, ok := r.fingerprints[fingerprint]
+	if !ok {
+		return ""
+	}
+	return id
 }

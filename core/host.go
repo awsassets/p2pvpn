@@ -16,22 +16,6 @@ import (
 	manet "github.com/multiformats/go-multiaddr/net"
 )
 
-var _host host.Host = nil
-
-func Host() host.Host {
-	return _host
-}
-
-// InitHost creates a libp2p host with a generated identity.
-func InitHost(address string, port int) host.Host {
-	h, err := libp2p.New(context.Background(),
-		libp2p.ListenAddrStrings(fmt.Sprintf("/ip4/%s/tcp/%d", address, port)))
-	if err != nil {
-		log.Fatalf("%v", err)
-	}
-	return h
-}
-
 // NewServerHost creates a libp2p host as relay.
 func NewServerHost(addr string, port int, apiPort int) host.Host {
 	server := fmt.Sprintf("http://127.0.0.1:%d", apiPort)
@@ -41,7 +25,7 @@ func NewServerHost(addr string, port int, apiPort int) host.Host {
 	h, err := libp2p.New(context.Background(),
 		libp2p.ListenAddrStrings(fmt.Sprintf("/ip4/%s/tcp/%d", addr, port)),
 		libp2p.EnableRelay(circuit.OptHop),
-		libp2p.Routing(route.MakeRouting(server, relay.RelayRendezvous)),
+		libp2p.Routing(route.MakeRouting(server, relay.RelayRendezvous, "")),
 		libp2p.EnableAutoRelay(),
 		libp2p.AddrsFactory(func(addrs []ma.Multiaddr) []ma.Multiaddr {
 			hasPublicIP := false
@@ -68,6 +52,5 @@ func NewServerHost(addr string, port int, apiPort int) host.Host {
 	if err != nil {
 		log.Errorf("%v", err)
 	}
-	_host = h
 	return h
 }

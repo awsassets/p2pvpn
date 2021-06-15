@@ -2,9 +2,13 @@ package engine
 
 import (
 	gocontext "context"
+	"encoding/json"
 	"errors"
-	"fmt"
+	"github.com/lp2p/p2pvpn/api/route"
+	"io/ioutil"
 	"net"
+	"net/http"
+	"strings"
 
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p-core/host"
@@ -12,7 +16,6 @@ import (
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/lp2p/p2pvpn/constant"
 	"github.com/lp2p/p2pvpn/context"
-	"github.com/lp2p/p2pvpn/core"
 	"github.com/lp2p/p2pvpn/log"
 	"github.com/lp2p/p2pvpn/transport/socks5"
 	"github.com/lp2p/p2pvpn/tunnel"
@@ -74,13 +77,13 @@ func (e *engine) insert(k *Key) {
 
 // initHost creates a libp2p host with a generated identity.
 func (e *engine) initHost() error {
-	addr, port, err := net.SplitHostPort(e.ServerAddr)
-	if err != nil {
-		return err
-	}
-
+	server := "http://" + e.ServerAddr
 	h, err := libp2p.New(gocontext.Background(),
-		libp2p.ListenAddrStrings(fmt.Sprintf("/ip4/%s/tcp/%d", addr, port)))
+		libp2p.EnableRelay(),
+		libp2p.EnableAutoRelay(),
+		libp2p.Routing(route.MakeRouting(server, constant.PeerRendezvous, e.Key.Fingerprint)),
+	)
+
 	if err != nil {
 		return err
 	}
@@ -116,17 +119,7 @@ func (e *engine) initSocks() error {
 					_ = c.SetKeepAlive(true)
 				}
 
-				/*
-					stream = f(target)
-					log ...
-				*/
-
-				/*
-					HOOK DEST PEER
-				*/
-				var dest peer.ID
-
-				stream, err := core.Host().NewStream(gocontext.Background(), dest, constant.Protocol)
+				stream, err := e.newStream(target)
 				// If an error happens, we write an error for response.
 				if err != nil {
 					log.Warnf("Starting new stream failed: %v", err)
@@ -169,4 +162,35 @@ func (e *engine) initP2PHost() error {
 	}
 
 	return nil
+}
+
+// newStream creates a stream between e.host and target peer.
+func (e *engine) newStream(target socks5.Addr) (network.Stream, error) {
+	targetStr := strings.Split(target.String(), ":")[0]
+	resp, err := http.Get("http://" + e.ServerAddr + constant.FingerprintsUrl + targetStr)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := ioutil.ReadAll(resp.Body)
+	var respPtr route.IDResp
+	err = json.Unmarshal(res, &respPtr)
+	if err != nil {
+		return nil, err
+	}
+	targetInfo := peer.AddrInfo{
+		ID: respPtr.PeerID,
+	}
+
+	err = e.host.Connect(gocontext.Background(), targetInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	stream, err := e.host.NewStream(gocontext.Background(), respPtr.PeerID, constant.Protocol)
+	if err != nil {
+		return nil, err
+	}
+
+	return stream, nil
 }

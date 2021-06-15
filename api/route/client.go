@@ -8,6 +8,7 @@ import (
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p-core/routing"
+	"github.com/libp2p/go-libp2p/p2p/host/relay"
 	"github.com/lp2p/p2pvpn/common/utils"
 	"github.com/lp2p/p2pvpn/constant"
 	"github.com/lp2p/p2pvpn/log"
@@ -23,8 +24,9 @@ var httpClient = &http.Client{}
 
 // Route is a implement of PeerRouting and ContentRouting.
 type Route struct {
-	h      host.Host
-	server string
+	h           host.Host
+	fingerprint string
+	server      string
 }
 
 // StatusResp receives server response status.
@@ -44,11 +46,16 @@ type PeerResp struct {
 	AddrInfo peer.AddrInfo `json:"addr_info,omitempty"`
 }
 
+type IDResp struct {
+	PeerID peer.ID `json:"peer_id,omitempty"`
+}
+
 // NewRoute creates a new remote routing for client to use.
-func NewRoute(h host.Host, server string) *Route {
+func NewRoute(h host.Host, server, fingerprint string) *Route {
 	return &Route{
-		h:      h,
-		server: server,
+		h:           h,
+		server:      server,
+		fingerprint: fingerprint,
 	}
 }
 
@@ -83,8 +90,9 @@ func (r *Route) Provide(ctx context.Context, cid cid.Cid, bcast bool) error {
 
 	resp, err := r.postForm(ctx, r.server+constant.RoutingUrl+cid.String(),
 		url.Values{
-			"id":    {r.h.ID().String()},
-			"addrs": {addrs},
+			"id":          {r.h.ID().String()},
+			"addrs":       {addrs},
+			"fingerprint": {r.fingerprint},
 		})
 	if err != nil {
 		return err
@@ -141,13 +149,17 @@ func (r *Route) FindProvidersAsync(ctx context.Context, cid cid.Cid, limit int) 
 
 // MakeRouting returns function for libp2p.Routing, it will register node itself
 // when create a new node.
-func MakeRouting(server, ns string) func(h host.Host) (routing.PeerRouting, error) {
+func MakeRouting(server, ns, fingerprint string) func(h host.Host) (routing.PeerRouting, error) {
 	var router routing.PeerRouting
 	return func(h host.Host) (routing.PeerRouting, error) {
-		router = NewRoute(h, server)
-		contentRouter := router.(routing.ContentRouting)
-		// Use Provide to register the node.
-		err := contentRouter.Provide(context.Background(), utils.StrToCid(ns), true)
+		router = NewRoute(h, server, fingerprint)
+		var err error
+		// Only register ourself when namespace is not relay.RelayRendezvous
+		if ns != relay.RelayRendezvous {
+			contentRouter := router.(routing.ContentRouting)
+			// Use Provide to register the node.
+			err = contentRouter.Provide(context.Background(), utils.StrToCid(ns), true)
+		}
 		return router, err
 	}
 }

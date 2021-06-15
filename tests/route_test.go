@@ -56,7 +56,7 @@ func TestRouteRelay(t *testing.T) {
 
 	_, err = libp2p.New(ctx,
 		libp2p.EnableRelay(circuit.OptHop),
-		libp2p.Routing(route.MakeRouting(server, relay.RelayRendezvous)),
+		libp2p.Routing(route.MakeRouting(server, relay.RelayRendezvous, "")),
 		libp2p.EnableAutoRelay(),
 		libp2p.AddrsFactory(func(addresses []ma.Multiaddr) []ma.Multiaddr {
 			for i, addr := range addresses {
@@ -76,7 +76,7 @@ func TestRouteRelay(t *testing.T) {
 	h3, err := libp2p.New(ctx,
 		libp2p.EnableRelay(),
 		libp2p.EnableAutoRelay(),
-		libp2p.Routing(route.MakeRouting(server, "clients")))
+		libp2p.Routing(route.MakeRouting(server, "clients", "")))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -161,14 +161,14 @@ func TestConnectByID(t *testing.T) {
 	server := "http://127.0.0.1:8000"
 
 	h1, err := libp2p.New(ctx,
-		libp2p.Routing(route.MakeRouting(server, "client")),
+		libp2p.Routing(route.MakeRouting(server, "client", "")),
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	h2, err := libp2p.New(ctx,
-		libp2p.Routing(route.MakeRouting(server, "client")))
+		libp2p.Routing(route.MakeRouting(server, "client", "")))
 	if err != nil {
 		t.Fatal(err)
 	}
