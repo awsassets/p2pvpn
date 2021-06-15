@@ -3,9 +3,11 @@ package engine
 import (
 	gocontext "context"
 	"errors"
+	"fmt"
 	"net"
-	"strconv"
 
+	"github.com/libp2p/go-libp2p"
+	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/lp2p/p2pvpn/constant"
@@ -34,12 +36,15 @@ func Insert(k *Key) {
 }
 
 type Key struct {
-	SocksAddr  string
-	ServerAddr string
+	SocksAddr   string
+	ServerAddr  string
+	Fingerprint string
 }
 
 type engine struct {
 	*Key
+
+	host host.Host
 }
 
 func (e *engine) start() error {
@@ -48,6 +53,7 @@ func (e *engine) start() error {
 	}
 
 	for _, f := range []func() error{
+		e.initHost,
 		e.initSocks,
 		e.initP2PHost,
 	} {
@@ -64,6 +70,23 @@ func (e *engine) stop() error {
 
 func (e *engine) insert(k *Key) {
 	e.Key = k
+}
+
+// initHost creates a libp2p host with a generated identity.
+func (e *engine) initHost() error {
+	addr, port, err := net.SplitHostPort(e.ServerAddr)
+	if err != nil {
+		return err
+	}
+
+	h, err := libp2p.New(gocontext.Background(),
+		libp2p.ListenAddrStrings(fmt.Sprintf("/ip4/%s/tcp/%d", addr, port)))
+	if err != nil {
+		return err
+	}
+
+	e.host = h
+	return nil
 }
 
 func (e *engine) initSocks() error {
@@ -94,6 +117,11 @@ func (e *engine) initSocks() error {
 				}
 
 				/*
+					stream = f(target)
+					log ...
+				*/
+
+				/*
 					HOOK DEST PEER
 				*/
 				var dest peer.ID
@@ -120,18 +148,10 @@ func (e *engine) initSocks() error {
 }
 
 func (e *engine) initP2PHost() error {
-	host, port, err := net.SplitHostPort(e.ServerAddr)
-	if err != nil {
-		return err
-	}
-	portInt, _ := strconv.Atoi(port)
-
-	h := core.InitHost(host, portInt)
-
 	// We let our host know that it needs to handle streams tagged with the
 	// protocol id that we have defined, and then handle them to
 	// our own streamHandling function.
-	h.SetStreamHandler(constant.Protocol, func(stream network.Stream) {
+	e.host.SetStreamHandler(constant.Protocol, func(stream network.Stream) {
 		buf := make([]byte, socks5.MaxAddrLen)
 
 		addr, err := socks5.ReadAddr(stream, buf)
@@ -144,8 +164,8 @@ func (e *engine) initP2PHost() error {
 	})
 
 	log.Infof("Peer host is listening at:")
-	for _, a := range h.Addrs() {
-		log.Infof("%s/%s\n", a, peer.Encode(h.ID()))
+	for _, a := range e.host.Addrs() {
+		log.Infof("%s/%s\n", a, peer.Encode(e.host.ID()))
 	}
 
 	return nil
