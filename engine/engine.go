@@ -4,6 +4,7 @@ import (
 	gocontext "context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -152,7 +153,13 @@ func (e *engine) initP2PHost() error {
 			return
 		}
 
-		tunnel.Add(context.ConnContext{Addr: &tcpAddr{addr.String()}, Conn: stream})
+		addrStr := addr.String()
+		addrHost, addrPort, _ := net.SplitHostPort(addrStr)
+		if addrHost == e.Fingerprint {
+			addrStr = fmt.Sprintf("127.0.0.1:%s", addrPort)
+		}
+
+		tunnel.Add(context.ConnContext{Addr: &tcpAddr{addrStr}, Conn: stream})
 	})
 
 	log.Infof("Peer host is listening at:")
