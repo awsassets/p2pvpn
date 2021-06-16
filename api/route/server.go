@@ -2,10 +2,11 @@ package route
 
 import (
 	"fmt"
-	"github.com/libp2p/go-libp2p-core/peer"
-	ma "github.com/multiformats/go-multiaddr"
 	"strings"
 	"sync"
+
+	"github.com/libp2p/go-libp2p-core/peer"
+	ma "github.com/multiformats/go-multiaddr"
 )
 
 type RouteTable struct {

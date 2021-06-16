@@ -3,14 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	logging "github.com/ipfs/go-log/v2"
-	"github.com/libp2p/go-libp2p/p2p/host/relay"
-	"github.com/lp2p/p2pvpn/core"
-	"github.com/lp2p/p2pvpn/log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	logging "github.com/ipfs/go-log/v2"
+	"github.com/libp2p/go-libp2p/p2p/host/relay"
+	"github.com/lp2p/p2pvpn/core"
+	"github.com/lp2p/p2pvpn/log"
 )
 
 func init() {
