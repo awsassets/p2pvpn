@@ -2,13 +2,8 @@ package engine
 
 import (
 	gocontext "context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net"
-	"net/http"
-
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/network"
@@ -19,6 +14,7 @@ import (
 	"github.com/lp2p/p2pvpn/log"
 	"github.com/lp2p/p2pvpn/transport/socks5"
 	"github.com/lp2p/p2pvpn/tunnel"
+	"net"
 )
 
 var _engine = &engine{}
@@ -173,19 +169,12 @@ func (e *engine) initP2PHost() error {
 // newStream creates a stream between e.host and target peer.
 func (e *engine) newStream(target socks5.Addr) (network.Stream, error) {
 	targetStr, _, _ := net.SplitHostPort(target.String())
-	resp, err := http.Get("http://" + e.ServerAddr + constant.FingerprintsUrl + targetStr)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := io.ReadAll(resp.Body)
-	var respPtr route.IDResp
-	err = json.Unmarshal(res, &respPtr)
+	peerID, err := route.Router().FindPeerID(targetStr)
 	if err != nil {
 		return nil, err
 	}
 	targetInfo := peer.AddrInfo{
-		ID: respPtr.PeerID,
+		ID: peerID,
 	}
 
 	err = e.host.Connect(gocontext.Background(), targetInfo)
@@ -193,7 +182,7 @@ func (e *engine) newStream(target socks5.Addr) (network.Stream, error) {
 		return nil, err
 	}
 
-	stream, err := e.host.NewStream(gocontext.Background(), respPtr.PeerID, constant.Protocol)
+	stream, err := e.host.NewStream(gocontext.Background(), peerID, constant.Protocol)
 	if err != nil {
 		return nil, err
 	}

@@ -29,25 +29,12 @@ type Route struct {
 	server      string
 }
 
-// StatusResp receives server response status.
-type StatusResp struct {
-	Status bool `json:"status"`
-}
+var (
+	_router *Route
+)
 
-// ProvidersResp receives FindProvidersAsync response.
-type ProvidersResp struct {
-	Status    bool                     `json:"status"`
-	AddrInfos map[string]peer.AddrInfo `json:"addr_infos,omitempty"`
-}
-
-// PeerResp receives FindPeer response
-type PeerResp struct {
-	Status   bool          `json:"status"`
-	AddrInfo peer.AddrInfo `json:"addr_info,omitempty"`
-}
-
-type IDResp struct {
-	PeerID peer.ID `json:"peer_id,omitempty"`
+func Router() *Route {
+	return _router
 }
 
 // NewRoute creates a new remote routing for client to use.
@@ -59,6 +46,7 @@ func NewRoute(h host.Host, server, fingerprint string) *Route {
 	}
 }
 
+// FindPeer implements routing.PeerRouting.
 func (r *Route) FindPeer(ctx context.Context, p peer.ID) (peer.AddrInfo, error) {
 	resp, err := r.get(ctx, r.server+constant.RoutingUrl+p.Pretty())
 	if err != nil {
@@ -79,6 +67,7 @@ func (r *Route) FindPeer(ctx context.Context, p peer.ID) (peer.AddrInfo, error) 
 	}
 }
 
+// Provide implements routing.ContentRouting.
 func (r *Route) Provide(ctx context.Context, cid cid.Cid, bcast bool) error {
 	if !bcast {
 		return nil
@@ -116,6 +105,7 @@ func (r *Route) Provide(ctx context.Context, cid cid.Cid, bcast bool) error {
 	}
 }
 
+// FindProvidersAsync implements routing.ContentRouting.
 func (r *Route) FindProvidersAsync(ctx context.Context, cid cid.Cid, limit int) <-chan peer.AddrInfo {
 	ch := make(chan peer.AddrInfo)
 	go func() {
@@ -147,12 +137,29 @@ func (r *Route) FindProvidersAsync(ctx context.Context, cid cid.Cid, limit int) 
 	return ch
 }
 
+// FindPeerID finds peer id by fingerprint.
+func (r *Route) FindPeerID(fingerprint string) (peer.ID, error) {
+	resp, err := http.Get(r.server + constant.FingerprintsUrl + fingerprint)
+	if err != nil {
+		return "", err
+	}
+
+	res, err := io.ReadAll(resp.Body)
+	var respPtr IDResp
+	err = json.Unmarshal(res, &respPtr)
+	if err != nil {
+		return "", err
+	}
+	return respPtr.PeerID, nil
+}
+
 // MakeRouting returns function for libp2p.Routing, it will register node itself
 // when create a new node.
 func MakeRouting(server, ns, fingerprint string) func(h host.Host) (routing.PeerRouting, error) {
 	var router routing.PeerRouting
 	return func(h host.Host) (routing.PeerRouting, error) {
-		router = NewRoute(h, server, fingerprint)
+		_router = NewRoute(h, server, fingerprint)
+		router = _router
 		var err error
 		// Only register ourself when namespace is not relay.RelayRendezvous
 		if ns != relay.RelayRendezvous {
