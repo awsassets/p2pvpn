@@ -22,6 +22,7 @@ func handleTCPConn(cc context.ConnContext) {
 	c, err := net.Dial(cc.Addr.Network(), cc.Addr.String())
 	if err != nil {
 		log.Errorf("TUNNEL: dial %s failed: %v", cc.Addr.String(), err)
+		return
 	}
 	defer c.Close()
 
