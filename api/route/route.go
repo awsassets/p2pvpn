@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/lp2p/p2pvpn/server"
 	"io"
 	"net/http"
 	"net/url"
@@ -54,7 +55,7 @@ func (r *Route) FindPeer(ctx context.Context, p peer.ID) (peer.AddrInfo, error) 
 	}
 
 	res, err := io.ReadAll(resp.Body)
-	var respPtr PeerResp
+	var respPtr server.PeerResp
 	err = json.Unmarshal(res, &respPtr)
 	if err != nil {
 		return peer.AddrInfo{}, err
@@ -92,7 +93,7 @@ func (r *Route) Provide(ctx context.Context, cid cid.Cid, bcast bool) error {
 		return err
 	}
 
-	var respPtr StatusResp
+	var respPtr server.StatusResp
 	err = json.Unmarshal(res, &respPtr)
 	if err != nil {
 		return err
@@ -120,7 +121,7 @@ func (r *Route) FindProvidersAsync(ctx context.Context, cid cid.Cid, limit int) 
 			log.Errorf("%v", err)
 		}
 
-		var respPtr ProvidersResp
+		var respPtr server.ProvidersResp
 		err = json.Unmarshal(res, &respPtr)
 		if err != nil {
 			log.Errorf("%v", err)
@@ -145,7 +146,7 @@ func (r *Route) FindPeerID(fingerprint string) (peer.ID, error) {
 	}
 
 	res, err := io.ReadAll(resp.Body)
-	var respPtr IDResp
+	var respPtr server.IDResp
 	err = json.Unmarshal(res, &respPtr)
 	if err != nil {
 		return "", err

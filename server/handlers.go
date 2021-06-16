@@ -1,4 +1,4 @@
-package core
+package server
 
 import (
 	"net/http"
@@ -6,7 +6,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/libp2p/go-libp2p-core/peer"
-	"github.com/lp2p/p2pvpn/api/route"
 )
 
 // GetNode returns node information by node id.
@@ -20,7 +19,7 @@ func (a *APIService) GetNode(c *gin.Context) {
 	if err != nil {
 		falseResponse(http.StatusNotFound, c)
 	} else {
-		c.JSON(http.StatusOK, route.PeerResp{
+		c.JSON(http.StatusOK, PeerResp{
 			Status:   true,
 			AddrInfo: info,
 		})
@@ -45,7 +44,7 @@ func (a *APIService) NewNode(c *gin.Context) {
 	if err != nil {
 		falseResponse(http.StatusInternalServerError, c)
 	} else {
-		c.JSON(http.StatusOK, route.StatusResp{
+		c.JSON(http.StatusOK, StatusResp{
 			Status: true,
 		})
 	}
@@ -58,7 +57,7 @@ func (a *APIService) GetProvider(c *gin.Context) {
 	if err != nil {
 		falseResponse(http.StatusNotFound, c)
 	} else {
-		c.JSON(http.StatusOK, route.ProvidersResp{
+		c.JSON(http.StatusOK, ProvidersResp{
 			Status:    true,
 			AddrInfos: pmap,
 		})
@@ -69,14 +68,14 @@ func (a *APIService) GetProvider(c *gin.Context) {
 func (a *APIService) GetPeerID(c *gin.Context) {
 	fingerprint := c.Param("fingerprint")
 	id := a.tab.FindPeerID(fingerprint)
-	c.JSON(http.StatusOK, route.IDResp{
+	c.JSON(http.StatusOK, IDResp{
 		PeerID: id,
 	})
 }
 
 // falseResponse returns false status json response.
 func falseResponse(status int, c *gin.Context) {
-	c.JSON(status, route.StatusResp{
+	c.JSON(status, StatusResp{
 		Status: false,
 	})
 }

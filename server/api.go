@@ -1,15 +1,14 @@
-package core
+package server
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/lp2p/p2pvpn/api/route"
 	"github.com/lp2p/p2pvpn/constant"
 )
 
 type APIService struct {
 	router *gin.Engine
 	addr   string
-	tab    *route.Table
+	tab    *Table
 }
 
 // NewDefaultAPIService create a APIService using gin.Default,
@@ -17,13 +16,13 @@ type APIService struct {
 func NewDefaultAPIService(addr string) *APIService {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
-	tab := route.NewRouteTable()
+	tab := NewRouteTable()
 	return NewAPIService(router, tab, addr)
 }
 
 // NewAPIService create a APIService with provider gin.Engine and route.RouteTable,
 // it's convenient for testing.
-func NewAPIService(router *gin.Engine, tab *route.Table, addr string) *APIService {
+func NewAPIService(router *gin.Engine, tab *Table, addr string) *APIService {
 	return &APIService{
 		router: router,
 		addr:   addr,

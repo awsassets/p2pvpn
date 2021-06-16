@@ -16,8 +16,8 @@ import (
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p/p2p/host/relay"
 	"github.com/lp2p/p2pvpn/api/route"
-	"github.com/lp2p/p2pvpn/core"
 	"github.com/lp2p/p2pvpn/log"
+	"github.com/lp2p/p2pvpn/server"
 	ma "github.com/multiformats/go-multiaddr"
 )
 
@@ -37,8 +37,8 @@ func connect(a, b host.Host) {
 
 func initApiServer() {
 	router := gin.New()
-	tab := route.NewRouteTable()
-	api := core.NewAPIService(router, tab, ":8000")
+	tab := server.NewRouteTable()
+	api := server.NewAPIService(router, tab, ":8000")
 	go api.Run()
 }
 

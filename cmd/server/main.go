@@ -10,8 +10,8 @@ import (
 
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/libp2p/go-libp2p/p2p/host/relay"
-	"github.com/lp2p/p2pvpn/core"
 	"github.com/lp2p/p2pvpn/log"
+	"github.com/lp2p/p2pvpn/server"
 )
 
 func init() {
@@ -26,9 +26,9 @@ func main() {
 	apiPort := flag.Int("api-port", 8000, "api service port")
 	flag.Parse()
 
-	api := core.NewDefaultAPIService(fmt.Sprintf(":%d", *apiPort))
+	api := server.NewDefaultAPIService(fmt.Sprintf(":%d", *apiPort))
 	go api.Run()
-	go core.NewServerHost(*apiPort)
+	go server.NewServerHost(*apiPort)
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
