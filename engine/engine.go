@@ -152,13 +152,12 @@ func (e *engine) initP2PHost() error {
 			return
 		}
 
-		addrStr := addr.String()
-		addrHost, addrPort, _ := net.SplitHostPort(addrStr)
+		addrHost, addrPort := addr.ToHostPort()
 		if addrHost == e.Fingerprint {
-			addrStr = fmt.Sprintf("127.0.0.1:%s", addrPort)
+			addrHost = fmt.Sprintf("127.0.0.1:%s", addrPort)
 		}
 
-		tunnel.Add(context.ConnContext{Addr: &tcpAddr{addrStr}, Conn: stream})
+		tunnel.Add(context.ConnContext{Addr: &tcpAddr{addrHost}, Conn: stream})
 	})
 
 	log.Infof("Peer host is listening at:")
@@ -171,7 +170,7 @@ func (e *engine) initP2PHost() error {
 
 // newStream creates a stream between e.host and target peer.
 func (e *engine) newStream(target socks5.Addr) (network.Stream, error) {
-	targetStr, _, _ := net.SplitHostPort(target.String())
+	targetStr, _ := target.ToHostPort()
 	peerID, err := route.Router().FindPeerID(targetStr)
 	if err != nil {
 		return nil, err

@@ -44,9 +44,7 @@ const MaxAuthLen = 255
 // Addr represents a SOCKS address as defined in RFC 1928 section 5.
 type Addr []byte
 
-func (a Addr) String() string {
-	var host, port string
-
+func (a Addr) ToHostPort() (host string, port string) {
 	switch a[0] {
 	case AtypDomainName:
 		hostLen := uint16(a[1])
@@ -60,6 +58,11 @@ func (a Addr) String() string {
 		port = strconv.Itoa((int(a[1+net.IPv6len]) << 8) | int(a[1+net.IPv6len+1]))
 	}
 
+	return
+}
+
+func (a Addr) String() string {
+	host, port := a.ToHostPort()
 	return net.JoinHostPort(host, port)
 }
 
