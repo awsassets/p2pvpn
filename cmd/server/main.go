@@ -22,14 +22,12 @@ func init() {
 func main() {
 	log.SetAllLoggers(logging.LevelWarn)
 
-	addr := flag.String("i", "0.0.0.0", "server ip address")
-	p2pPort := flag.Int("l", 12001, "libp2p server port")
-	apiPort := flag.Int("a", 8000, "api service port")
+	apiPort := flag.Int("api-port", 8000, "api service port")
 	flag.Parse()
 
 	api := core.NewDefaultAPIService(fmt.Sprintf(":%d", *apiPort))
 	go api.Run()
-	go core.NewServerHost(*addr, *p2pPort, *apiPort)
+	go core.NewServerHost(*apiPort)
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)

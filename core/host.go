@@ -17,13 +17,12 @@ import (
 )
 
 // NewServerHost creates a libp2p host as relay.
-func NewServerHost(addr string, port int, apiPort int) host.Host {
+func NewServerHost(apiPort int) host.Host {
 	server := fmt.Sprintf("http://127.0.0.1:%d", apiPort)
 
 	publicIP := utils.GetPublicIP()
 
 	h, err := libp2p.New(context.Background(),
-		libp2p.ListenAddrStrings(fmt.Sprintf("/ip4/%s/tcp/%d", addr, port)),
 		libp2p.EnableRelay(circuit.OptHop),
 		libp2p.Routing(route.MakeRouting(server, relay.RelayRendezvous, "")),
 		libp2p.EnableAutoRelay(),
