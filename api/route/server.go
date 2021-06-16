@@ -9,15 +9,15 @@ import (
 	ma "github.com/multiformats/go-multiaddr"
 )
 
-type RouteTable struct {
+type Table struct {
 	mx           sync.Mutex
 	providers    map[string]map[string]peer.AddrInfo
 	peers        map[peer.ID]peer.AddrInfo
 	fingerprints map[string]peer.ID
 }
 
-func NewRouteTable() *RouteTable {
-	return &RouteTable{
+func NewRouteTable() *Table {
+	return &Table{
 		providers:    make(map[string]map[string]peer.AddrInfo),
 		fingerprints: make(map[string]peer.ID),
 	}
@@ -45,23 +45,23 @@ func parseAddrInfoHack(id peer.ID, addrs string) (peer.AddrInfo, error) {
 
 }
 
-func (r *RouteTable) Find(id peer.ID) (peer.AddrInfo, error) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-	pi, ok := r.peers[id]
+func (t *Table) Find(id peer.ID) (peer.AddrInfo, error) {
+	t.mx.Lock()
+	defer t.mx.Unlock()
+	pi, ok := t.peers[id]
 	if !ok {
 		return peer.AddrInfo{}, fmt.Errorf("route: not found")
 	}
 	return pi, nil
 }
 
-func (r *RouteTable) Provide(cid string, id peer.ID, addrs, fingerprint string) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-	pmap, ok := r.providers[cid]
+func (t *Table) Provide(cid string, id peer.ID, addrs, fingerprint string) error {
+	t.mx.Lock()
+	defer t.mx.Unlock()
+	pmap, ok := t.providers[cid]
 	if !ok {
 		pmap = make(map[string]peer.AddrInfo)
-		r.providers[cid] = pmap
+		t.providers[cid] = pmap
 	}
 
 	pi, err := parseAddrInfoHack(id, addrs)
@@ -73,26 +73,26 @@ func (r *RouteTable) Provide(cid string, id peer.ID, addrs, fingerprint string) 
 	idStr := id.String()
 	pmap[idStr] = pi
 
-	r.fingerprints[fingerprint] = id
+	t.fingerprints[fingerprint] = id
 
-	if r.peers == nil {
-		r.peers = make(map[peer.ID]peer.AddrInfo)
+	if t.peers == nil {
+		t.peers = make(map[peer.ID]peer.AddrInfo)
 	}
-	r.peers[id] = pi
+	t.peers[id] = pi
 
 	return nil
 }
 
-func (r *RouteTable) FindProvider(provider string) (map[string]peer.AddrInfo, error) {
-	pmap, ok := r.providers[provider]
+func (t *Table) FindProvider(provider string) (map[string]peer.AddrInfo, error) {
+	pmap, ok := t.providers[provider]
 	if !ok {
 		return nil, fmt.Errorf("provider not found")
 	}
 	return pmap, nil
 }
 
-func (r *RouteTable) FindPeerID(fingerprint string) peer.ID {
-	id, ok := r.fingerprints[fingerprint]
+func (t *Table) FindPeerID(fingerprint string) peer.ID {
+	id, ok := t.fingerprints[fingerprint]
 	if !ok {
 		return ""
 	}

@@ -9,7 +9,7 @@ import (
 type APIService struct {
 	router *gin.Engine
 	addr   string
-	tab    *route.RouteTable
+	tab    *route.Table
 }
 
 // NewDefaultAPIService create a APIService using gin.Default,
@@ -23,7 +23,7 @@ func NewDefaultAPIService(addr string) *APIService {
 
 // NewAPIService create a APIService with provider gin.Engine and route.RouteTable,
 // it's convenient for testing.
-func NewAPIService(router *gin.Engine, tab *route.RouteTable, addr string) *APIService {
+func NewAPIService(router *gin.Engine, tab *route.Table, addr string) *APIService {
 	return &APIService{
 		router: router,
 		addr:   addr,
