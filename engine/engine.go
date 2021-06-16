@@ -4,17 +4,19 @@ import (
 	gocontext "context"
 	"errors"
 	"fmt"
+	"net"
+
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/lp2p/p2pvpn/api/route"
+	"github.com/lp2p/p2pvpn/common/pool"
 	"github.com/lp2p/p2pvpn/constant"
 	"github.com/lp2p/p2pvpn/context"
 	"github.com/lp2p/p2pvpn/log"
 	"github.com/lp2p/p2pvpn/transport/socks5"
 	"github.com/lp2p/p2pvpn/tunnel"
-	"net"
 )
 
 var _engine = &engine{}
@@ -141,7 +143,8 @@ func (e *engine) initP2PHost() error {
 	// protocol id that we have defined, and then handle them to
 	// our own streamHandling function.
 	e.host.SetStreamHandler(constant.Protocol, func(stream network.Stream) {
-		buf := make([]byte, socks5.MaxAddrLen)
+		buf := pool.Get(socks5.MaxAddrLen)
+		defer pool.Put(buf)
 
 		addr, err := socks5.ReadAddr(stream, buf)
 		if err != nil {
