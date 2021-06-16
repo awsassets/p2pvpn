@@ -3,7 +3,6 @@ package engine
 import (
 	gocontext "context"
 	"errors"
-	"fmt"
 	"net"
 
 	"github.com/libp2p/go-libp2p"
@@ -154,7 +153,7 @@ func (e *engine) initP2PHost() error {
 
 		addrHost, addrPort := addr.ToHostPort()
 		if addrHost == e.Fingerprint {
-			addrHost = fmt.Sprintf("127.0.0.1:%s", addrPort)
+			addrHost = net.JoinHostPort("127.0.0.1", addrPort)
 		}
 
 		tunnel.Add(context.ConnContext{Addr: &tcpAddr{addrHost}, Conn: stream})
