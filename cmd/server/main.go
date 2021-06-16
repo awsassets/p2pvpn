@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/lp2p/p2pvpn/core"
 	"os"
 	"os/signal"
 	"syscall"
@@ -28,7 +29,7 @@ func main() {
 
 	api := server.NewDefaultAPIService(fmt.Sprintf(":%d", *apiPort))
 	go api.Run()
-	go server.NewServerHost(*apiPort)
+	go core.NewServerHost(*apiPort)
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
