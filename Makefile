@@ -17,6 +17,7 @@ all: client server
 client:
 	$(GO_BUILD) -o $(BUILD_DIR)/$(PREFIX)-$@ cmd/$@/main.go
 
+.PHONY: server
 server:
 	$(GO_BUILD) -o $(BUILD_DIR)/$(PREFIX)-$@ cmd/$@/main.go
 
