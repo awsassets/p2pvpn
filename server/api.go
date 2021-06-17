@@ -2,13 +2,15 @@ package server
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/lp2p/p2pvpn/constant"
 )
 
 type APIService struct {
-	router *gin.Engine
-	addr   string
-	tab    *Table
+	router   *gin.Engine
+	addr     string
+	tab      *Table
+	serverID peer.ID
 }
 
 // NewDefaultAPIService create a APIService using gin.Default,
@@ -34,8 +36,13 @@ func NewAPIService(router *gin.Engine, tab *Table, addr string) *APIService {
 func (a *APIService) RegisterHandler() {
 	a.router.GET(constant.RoutingUrl+":id", a.GetNode)
 	a.router.POST(constant.RoutingUrl+":cid", a.NewNode)
+
 	a.router.GET(constant.RoutingProviderUrl+":cid", a.GetProvider)
+
 	a.router.GET(constant.FingerprintsUrl+":fingerprint", a.GetPeerID)
+
+	a.router.GET(constant.ServerIDUrl, a.GetServerID)
+	a.router.POST(constant.ServerIDUrl+":id", a.SetServerID)
 }
 
 // Run starts api service.

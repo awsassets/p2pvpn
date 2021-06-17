@@ -2,30 +2,38 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"strings"
 
 	"github.com/libp2p/go-libp2p"
 	circuit "github.com/libp2p/go-libp2p-circuit"
 	"github.com/libp2p/go-libp2p-core/host"
+	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p/p2p/host/relay"
 	"github.com/lp2p/p2pvpn/api/route"
 	"github.com/lp2p/p2pvpn/common/utils"
+	"github.com/lp2p/p2pvpn/constant"
 	"github.com/lp2p/p2pvpn/log"
+	"github.com/lp2p/p2pvpn/server"
 	ma "github.com/multiformats/go-multiaddr"
 	manet "github.com/multiformats/go-multiaddr/net"
 )
 
 // NewServerHost creates a libp2p host as relay.
 func NewServerHost(apiPort int) host.Host {
-	server := fmt.Sprintf("http://127.0.0.1:%d", apiPort)
+	serverUrl := fmt.Sprintf("http://127.0.0.1:%d", apiPort)
 
 	publicIP := utils.GetPublicIP()
 
 	h, err := libp2p.New(context.Background(),
+		libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/0"),
 		libp2p.EnableRelay(circuit.OptHop),
-		libp2p.Routing(route.MakeRouting(server, relay.RelayRendezvous, "")),
+		libp2p.Routing(route.MakeRouting(serverUrl, relay.RelayRendezvous, "")),
 		libp2p.EnableAutoRelay(),
+		libp2p.EnableNATService(),
 		libp2p.AddrsFactory(func(addrs []ma.Multiaddr) []ma.Multiaddr {
 			hasPublicIP := false
 			var address ma.Multiaddr
@@ -51,5 +59,28 @@ func NewServerHost(apiPort int) host.Host {
 	if err != nil {
 		log.Errorf("%v", err)
 	}
+
+	err = registerServerID(serverUrl, h.ID())
+	if err != nil {
+		log.Errorf("%v", err)
+	}
+
 	return h
+}
+
+func registerServerID(serverUrl string, id peer.ID) error {
+	resp, err := http.Post(serverUrl+constant.ServerIDUrl+id.String(), "", nil)
+	if err != nil {
+		return err
+	}
+	res, err := io.ReadAll(resp.Body)
+	var respPtr server.StatusResp
+	err = json.Unmarshal(res, &respPtr)
+	if err != nil {
+		return err
+	}
+	if !respPtr.Status {
+		return fmt.Errorf("failed to register server id")
+	}
+	return nil
 }

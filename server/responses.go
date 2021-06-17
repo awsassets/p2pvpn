@@ -19,7 +19,7 @@ type PeerResp struct {
 	AddrInfo peer.AddrInfo `json:"addr_info,omitempty"`
 }
 
-// IDResp receives FindPeerID response.
+// IDResp receives FindPeerID and GetServerID response.
 type IDResp struct {
 	PeerID peer.ID `json:"peer_id,omitempty"`
 }

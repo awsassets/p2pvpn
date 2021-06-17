@@ -73,6 +73,24 @@ func (a *APIService) GetPeerID(c *gin.Context) {
 	})
 }
 
+func (a *APIService) SetServerID(c *gin.Context) {
+	id, err := peer.Decode(c.Param("id"))
+	if err != nil {
+		falseResponse(http.StatusInternalServerError, c)
+		return
+	}
+	a.serverID = id
+	c.JSON(http.StatusOK, StatusResp{
+		Status: true,
+	})
+}
+
+func (a *APIService) GetServerID(c *gin.Context) {
+	c.JSON(http.StatusOK, IDResp{
+		PeerID: a.serverID,
+	})
+}
+
 // falseResponse returns false status json response.
 func falseResponse(status int, c *gin.Context) {
 	c.JSON(status, StatusResp{

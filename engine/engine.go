@@ -2,8 +2,14 @@ package engine
 
 import (
 	gocontext "context"
+	"encoding/json"
 	"errors"
+	"github.com/libp2p/go-libp2p-core/event"
+	"github.com/lp2p/p2pvpn/common/utils"
+	"io"
 	"net"
+	"net/http"
+	"time"
 
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p-core/host"
@@ -14,6 +20,7 @@ import (
 	"github.com/lp2p/p2pvpn/constant"
 	"github.com/lp2p/p2pvpn/context"
 	"github.com/lp2p/p2pvpn/log"
+	"github.com/lp2p/p2pvpn/server"
 	"github.com/lp2p/p2pvpn/transport/socks5"
 	"github.com/lp2p/p2pvpn/tunnel"
 )
@@ -54,6 +61,7 @@ func (e *engine) start() error {
 
 	for _, f := range []func() error{
 		e.initHost,
+		e.initAutoNat,
 		e.initSocks,
 		e.initP2PHost,
 	} {
@@ -74,18 +82,38 @@ func (e *engine) insert(k *Key) {
 
 // initHost creates a libp2p host with a generated identity.
 func (e *engine) initHost() error {
-	server := "http://" + e.ServerAddr
+	serverUrl := "http://" + e.ServerAddr
 	h, err := libp2p.New(gocontext.Background(),
+		libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/0"),
 		libp2p.EnableRelay(),
 		libp2p.EnableAutoRelay(),
-		libp2p.Routing(route.MakeRouting(server, constant.PeerRendezvous, e.Key.Fingerprint)),
+		libp2p.Routing(route.MakeRouting(serverUrl, constant.PeerRendezvous, e.Key.Fingerprint)),
 	)
-
 	if err != nil {
 		return err
 	}
 
 	e.host = h
+	return nil
+}
+
+func (e *engine) initAutoNat() error {
+	serverID, err := e.getServerID()
+	if err != nil {
+		return err
+	}
+
+	serverInfo := peer.AddrInfo{
+		ID: serverID,
+	}
+
+	err = e.host.Connect(gocontext.Background(), serverInfo)
+	if err != nil {
+		return err
+	}
+
+	go e.listenNATChange()
+
 	return nil
 }
 
@@ -189,4 +217,45 @@ func (e *engine) newStream(target socks5.Addr) (network.Stream, error) {
 	}
 
 	return stream, nil
+}
+
+func (e *engine) getServerID() (peer.ID, error) {
+	resp, err := http.Get("http://" + e.ServerAddr + constant.ServerIDUrl)
+	if err != nil {
+		return "", err
+	}
+
+	res, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var respPtr server.IDResp
+	err = json.Unmarshal(res, &respPtr)
+	if err != nil {
+		return "", err
+	}
+	return respPtr.PeerID, nil
+}
+
+func (e *engine) listenNATChange() {
+	subscriber, err := e.host.EventBus().Subscribe(&event.EvtLocalReachabilityChanged{})
+	if err != nil {
+		log.Errorf("%v", err)
+	}
+
+	select {
+	case ev := <-subscriber.Out():
+		tureEv, ok := ev.(event.EvtLocalReachabilityChanged)
+		if ok && tureEv.Reachability == network.ReachabilityPrivate {
+			// Waiting for select relay.
+			time.Sleep(3000 * time.Millisecond)
+			cid := utils.StrToCid(constant.PeerRendezvous)
+			err := route.Router().Provide(gocontext.Background(), cid, true)
+			if err != nil {
+				log.Errorf("%v", err)
+			}
+			log.Infof("Advertise relay address success")
+		}
+	}
 }
