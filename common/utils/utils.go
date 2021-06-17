@@ -23,7 +23,7 @@ func StrToCid(ns string) cid.Cid {
 // GetPublicIP access ip api to get public IP
 // If failed, will return 127.0.0.1
 func GetPublicIP() string {
-	response, err := http.Get("https://api.ip.sb/ip")
+	response, err := http.Get("https://api-ipv4.ip.sb/ip")
 	if err != nil {
 		return "127.0.0.1"
 	}
