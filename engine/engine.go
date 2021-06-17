@@ -4,11 +4,11 @@ import (
 	gocontext "context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/libp2p/go-libp2p-core/event"
 	"github.com/lp2p/p2pvpn/common/utils"
-	"io"
 	"net"
-	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/libp2p/go-libp2p"
@@ -44,8 +44,10 @@ func Insert(k *Key) {
 
 type Key struct {
 	SocksAddr   string
-	ServerAddr  string
+	ServerUrl   string
 	Fingerprint string
+
+	secret string
 }
 
 type engine struct {
@@ -60,8 +62,9 @@ func (e *engine) start() error {
 	}
 
 	for _, f := range []func() error{
+		e.initServerUrl,
 		e.initHost,
-		e.initAutoNat,
+		e.initAutoNAT,
 		e.initSocks,
 		e.initP2PHost,
 	} {
@@ -80,14 +83,26 @@ func (e *engine) insert(k *Key) {
 	e.Key = k
 }
 
+// initServerUrl gets secret from server url.
+func (e *engine) initServerUrl() error {
+	serverUrl, err := url.Parse(e.ServerUrl)
+	if err != nil {
+		return err
+	}
+
+	e.secret = serverUrl.User.Username()
+	e.ServerUrl = fmt.Sprintf("%s://%s", serverUrl.Scheme, serverUrl.Host)
+
+	return nil
+}
+
 // initHost creates a libp2p host with a generated identity.
 func (e *engine) initHost() error {
-	serverUrl := "http://" + e.ServerAddr
 	h, err := libp2p.New(gocontext.Background(),
 		libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/0"),
 		libp2p.EnableRelay(),
 		libp2p.EnableAutoRelay(),
-		libp2p.Routing(route.MakeRouting(serverUrl, constant.PeerRendezvous, e.Key.Fingerprint)),
+		libp2p.Routing(route.MakeRouting(e.ServerUrl, constant.PeerRendezvous, e.Fingerprint, e.secret)),
 	)
 	if err != nil {
 		return err
@@ -97,8 +112,9 @@ func (e *engine) initHost() error {
 	return nil
 }
 
-func (e *engine) initAutoNat() error {
-	serverID, err := e.getServerID()
+// initAutoNAT connect to server nat service, figure out our nat type.
+func (e *engine) initAutoNAT() error {
+	serverID, err := route.Router().GetServerID()
 	if err != nil {
 		return err
 	}
@@ -219,25 +235,8 @@ func (e *engine) newStream(target socks5.Addr) (network.Stream, error) {
 	return stream, nil
 }
 
-func (e *engine) getServerID() (peer.ID, error) {
-	resp, err := http.Get("http://" + e.ServerAddr + constant.ServerIDUrl)
-	if err != nil {
-		return "", err
-	}
-
-	res, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	var respPtr server.IDResp
-	err = json.Unmarshal(res, &respPtr)
-	if err != nil {
-		return "", err
-	}
-	return respPtr.PeerID, nil
-}
-
+// listenNATChange subscribes nat change event. When change to private, libp2p will auto
+// select a node as relay, and update address, then we advertise our new addres to server.
 func (e *engine) listenNATChange() {
 	subscriber, err := e.host.EventBus().Subscribe(&event.EvtLocalReachabilityChanged{})
 	if err != nil {

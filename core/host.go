@@ -23,7 +23,7 @@ import (
 )
 
 // NewServerHost creates a libp2p host as relay.
-func NewServerHost(apiPort int) host.Host {
+func NewServerHost(apiPort int, secret string) host.Host {
 	serverUrl := fmt.Sprintf("http://127.0.0.1:%d", apiPort)
 
 	publicIP := utils.GetPublicIP()
@@ -31,7 +31,7 @@ func NewServerHost(apiPort int) host.Host {
 	h, err := libp2p.New(context.Background(),
 		libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/0"),
 		libp2p.EnableRelay(circuit.OptHop),
-		libp2p.Routing(route.MakeRouting(serverUrl, relay.RelayRendezvous, "")),
+		libp2p.Routing(route.MakeRouting(serverUrl, relay.RelayRendezvous, "", secret)),
 		libp2p.EnableAutoRelay(),
 		libp2p.EnableNATService(),
 		libp2p.AddrsFactory(func(addrs []ma.Multiaddr) []ma.Multiaddr {
@@ -60,7 +60,7 @@ func NewServerHost(apiPort int) host.Host {
 		log.Errorf("%v", err)
 	}
 
-	err = registerServerID(serverUrl, h.ID())
+	err = route.Router().SetServerID()
 	if err != nil {
 		log.Errorf("%v", err)
 	}

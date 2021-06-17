@@ -68,11 +68,18 @@ func (a *APIService) GetProvider(c *gin.Context) {
 func (a *APIService) GetPeerID(c *gin.Context) {
 	fingerprint := c.Param("fingerprint")
 	id := a.tab.FindPeerID(fingerprint)
-	c.JSON(http.StatusOK, IDResp{
+	var status int
+	if id == "" {
+		status = http.StatusNotFound
+	} else {
+		status = http.StatusOK
+	}
+	c.JSON(status, IDResp{
 		PeerID: id,
 	})
 }
 
+// SetServerID sets server libp2p host id.
 func (a *APIService) SetServerID(c *gin.Context) {
 	id, err := peer.Decode(c.Param("id"))
 	if err != nil {
@@ -85,6 +92,7 @@ func (a *APIService) SetServerID(c *gin.Context) {
 	})
 }
 
+// GetServerID returns server libp2p host id.
 func (a *APIService) GetServerID(c *gin.Context) {
 	c.JSON(http.StatusOK, IDResp{
 		PeerID: a.serverID,

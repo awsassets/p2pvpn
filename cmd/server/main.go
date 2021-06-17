@@ -25,11 +25,12 @@ func main() {
 	log.SetAllLoggers(logging.LevelWarn)
 
 	apiPort := flag.Int("api-port", 8000, "api service port")
+	secret := flag.String("secret", "p2pvpn", "api auth secret")
 	flag.Parse()
 
-	api := server.NewDefaultAPIService(fmt.Sprintf(":%d", *apiPort))
+	api := server.NewDefaultAPIService(fmt.Sprintf(":%d", *apiPort), *secret)
 	go api.Run()
-	go core.NewServerHost(*apiPort)
+	go core.NewServerHost(*apiPort, *secret)
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)

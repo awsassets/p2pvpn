@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"io"
 	"net/http"
 	"strings"
@@ -38,4 +40,10 @@ func GetPublicIP() string {
 	ip := string(body)
 	ip = strings.TrimRight(ip, "\n")
 	return ip
+}
+
+func Md5(secret string) string {
+	hash := md5.New()
+	hash.Write([]byte(secret))
+	return hex.EncodeToString(hash.Sum(nil))
 }
