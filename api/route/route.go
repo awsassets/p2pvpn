@@ -210,6 +210,7 @@ func MakeRouting(serverUrl, ns, fingerprint, secret string) func(h host.Host) (r
 	}
 }
 
+// get sends get request with auth header.
 func (r *Route) get(url string) (resp *http.Response, err error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -219,7 +220,7 @@ func (r *Route) get(url string) (resp *http.Response, err error) {
 	return httpClient.Do(req)
 }
 
-// getWithContext Sends getWithContext request with context.
+// getWithContext sends get request with auth header and context.
 func (r *Route) getWithContext(ctx context.Context, url string) (resp *http.Response, err error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -229,6 +230,7 @@ func (r *Route) getWithContext(ctx context.Context, url string) (resp *http.Resp
 	return httpClient.Do(req)
 }
 
+// post sends post request with auth header.
 func (r *Route) post(url, contentType string, body io.Reader) (resp *http.Response, err error) {
 	req, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
@@ -239,7 +241,7 @@ func (r *Route) post(url, contentType string, body io.Reader) (resp *http.Respon
 	return httpClient.Do(req)
 }
 
-// postWithContext Sends postWithContext request with context.
+// postWithContext sends post request with context.
 func (r *Route) postWithContext(ctx context.Context, url, contentType string, body io.Reader) (resp *http.Response, err error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
 	if err != nil {
@@ -250,7 +252,7 @@ func (r *Route) postWithContext(ctx context.Context, url, contentType string, bo
 	return httpClient.Do(req)
 }
 
-// postForm Sends form request with context.
+// postForm sends form request with auth header and context.
 func (r *Route) postForm(ctx context.Context, url string, data url.Values) (resp *http.Response, err error) {
 	return r.postWithContext(ctx, url, "application/x-www-form-urlencoded", strings.NewReader(data.Encode()))
 }
