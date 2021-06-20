@@ -1,6 +1,7 @@
 package server
 
 import (
+	"net"
 	"net/http"
 	"strings"
 
@@ -37,8 +38,12 @@ func (a *APIService) NewNode(c *gin.Context) {
 		return
 	}
 
-	publicAddr := strings.Split(c.Request.RemoteAddr, ":")
-	strings.Replace(addrs, "127.0.0.1", publicAddr[0], 1)
+	host, _, err := net.SplitHostPort(c.Request.RemoteAddr)
+	if err != nil {
+		falseResponse(http.StatusInternalServerError, c)
+		return
+	}
+	addrs = strings.Replace(addrs, "127.0.0.1", host, 1)
 
 	err = a.tab.Provide(cid, id, addrs, fingerprint)
 	if err != nil {
