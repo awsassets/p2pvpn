@@ -244,6 +244,7 @@ func (e *engine) listenNATChange() {
 	select {
 	case ev := <-subscriber.Out():
 		tureEv, ok := ev.(event.EvtLocalReachabilityChanged)
+		log.Infof("Nat type detected: %s", tureEv.Reachability.String())
 		if ok && tureEv.Reachability == network.ReachabilityPrivate {
 			// Waiting for select relay.
 			time.Sleep(3000 * time.Millisecond)
