@@ -14,12 +14,12 @@ GOOS ?= $(shell go env GOOS)
 GO_BUILD = GO111MODULE=$(GO111MODULE) CGO_ENABLED=$(CGO_ENABLED) \
 	go build $(BUILD_FLAGS) -ldflags '$(LDFLAGS)' -trimpath
 
+.PHONY: client server clean
 all: client server
 
 client:
 	$(GO_BUILD) -o $(BUILD_DIR)/$(PREFIX)-$@-$(GOOS) cmd/$@/main.go
 
-.PHONY: server
 server:
 	$(GO_BUILD) -o $(BUILD_DIR)/$(PREFIX)-$@-$(GOOS) cmd/$@/main.go
 
