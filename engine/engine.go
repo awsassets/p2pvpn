@@ -244,16 +244,18 @@ func (e *engine) listenNATChange() {
 	select {
 	case ev := <-subscriber.Out():
 		tureEv, ok := ev.(event.EvtLocalReachabilityChanged)
-		log.Infof("Nat type detected: %s", tureEv.Reachability.String())
-		if ok && tureEv.Reachability == network.ReachabilityPrivate {
-			// Waiting for select relay.
-			time.Sleep(3000 * time.Millisecond)
-			cid := utils.StrToCid(constant.PeerRendezvous)
-			err := route.Router().Provide(gocontext.Background(), cid, true)
-			if err != nil {
-				log.Errorf("%v", err)
+		if ok {
+			log.Infof("Nat type detected: %s", tureEv.Reachability.String())
+			if tureEv.Reachability == network.ReachabilityPrivate {
+				// Waiting for select relay.
+				time.Sleep(3000 * time.Millisecond)
+				cid := utils.StrToCid(constant.PeerRendezvous)
+				err := route.Router().Provide(gocontext.Background(), cid, true)
+				if err != nil {
+					log.Errorf("%v", err)
+				}
+				log.Infof("Advertise relay address success")
 			}
-			log.Infof("Advertise relay address success")
 		}
 	}
 }
