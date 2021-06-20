@@ -2,7 +2,6 @@ package engine
 
 import (
 	gocontext "context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/libp2p/go-libp2p-core/event"
@@ -20,7 +19,6 @@ import (
 	"github.com/lp2p/p2pvpn/constant"
 	"github.com/lp2p/p2pvpn/context"
 	"github.com/lp2p/p2pvpn/log"
-	"github.com/lp2p/p2pvpn/server"
 	"github.com/lp2p/p2pvpn/transport/socks5"
 	"github.com/lp2p/p2pvpn/tunnel"
 )
