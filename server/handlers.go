@@ -55,6 +55,19 @@ func (a *APIService) NewNode(c *gin.Context) {
 	}
 }
 
+// DeleteNode delete node entry.
+func (a *APIService) DeleteNode(c *gin.Context) {
+	fingerprint := c.Param("fingerprint")
+	err := a.tab.Delete(fingerprint)
+	if err != nil {
+		falseResponse(http.StatusInternalServerError, c)
+		return
+	}
+	c.JSON(http.StatusOK, StatusResp{
+		Status: true,
+	})
+}
+
 // GetProvider returns all nodes under the same provider.
 func (a *APIService) GetProvider(c *gin.Context) {
 	cid := c.Param("cid")
@@ -69,8 +82,8 @@ func (a *APIService) GetProvider(c *gin.Context) {
 	}
 }
 
-// GetPeerID returns peer id by fingerprint.
-func (a *APIService) GetPeerID(c *gin.Context) {
+// GetNodeID returns peer id by fingerprint.
+func (a *APIService) GetNodeID(c *gin.Context) {
 	fingerprint := c.Param("fingerprint")
 	id := a.tab.FindPeerID(fingerprint)
 	var status int

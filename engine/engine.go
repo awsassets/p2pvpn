@@ -74,6 +74,10 @@ func (e *engine) start() error {
 }
 
 func (e *engine) stop() error {
+	err := route.Router().Logout(e.Fingerprint)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

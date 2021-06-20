@@ -1,8 +1,8 @@
 package server
 
 import (
-  "net/http"
-  
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/lp2p/p2pvpn/common/utils"
@@ -44,7 +44,8 @@ func (a *APIService) RegisterHandler() {
 
 	a.router.GET(constant.RoutingProviderUrl+":cid", a.GetProvider)
 
-	a.router.GET(constant.FingerprintsUrl+":fingerprint", a.GetPeerID)
+	a.router.GET(constant.FingerprintsUrl+":fingerprint", a.GetNodeID)
+	a.router.DELETE(constant.FingerprintsUrl+":fingerprint", a.DeleteNode)
 
 	a.router.GET(constant.ServerIDUrl, a.GetServerID)
 	a.router.POST(constant.ServerIDUrl+":id", a.SetServerID)

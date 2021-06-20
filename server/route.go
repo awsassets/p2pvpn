@@ -6,6 +6,8 @@ import (
 	"sync"
 
 	"github.com/libp2p/go-libp2p-core/peer"
+	"github.com/lp2p/p2pvpn/common/utils"
+	"github.com/lp2p/p2pvpn/constant"
 	ma "github.com/multiformats/go-multiaddr"
 )
 
@@ -97,4 +99,22 @@ func (t *Table) FindPeerID(fingerprint string) peer.ID {
 		return ""
 	}
 	return id
+}
+
+func (t *Table) Delete(fingerprint string) error {
+	id, ok := t.fingerprints[fingerprint]
+	if ok {
+		delete(t.fingerprints, fingerprint)
+		delete(t.peers, id)
+	} else {
+		return fmt.Errorf("fail to delete")
+	}
+
+	cid := utils.StrToCid(constant.PeerRendezvous)
+	peerMap, ok := t.providers[cid.String()]
+	if ok {
+		delete(peerMap, id.String())
+		return nil
+	}
+	return fmt.Errorf("fail to delete")
 }

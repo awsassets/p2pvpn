@@ -156,6 +156,24 @@ func (r *Route) FindPeerID(fingerprint string) (peer.ID, error) {
 	return respPtr.PeerID, nil
 }
 
+func (r *Route) Logout(fingerprint string) error {
+	resp, err := r.delete(r.serverUrl + constant.FingerprintsUrl + fingerprint)
+	if err != nil {
+		return err
+	}
+
+	res, err := io.ReadAll(resp.Body)
+	var respPtr server.StatusResp
+	err = json.Unmarshal(res, &respPtr)
+	if err != nil {
+		return err
+	}
+	if !respPtr.Status {
+		return fmt.Errorf("fail to delete")
+	}
+	return nil
+}
+
 func (r *Route) SetServerID() error {
 	resp, err := r.post(r.serverUrl+constant.ServerIDUrl+r.h.ID().String(), "", nil)
 	if err != nil {
@@ -214,7 +232,16 @@ func MakeRouting(serverUrl, ns, fingerprint, secret string) func(h host.Host) (r
 func (r *Route) get(url string) (resp *http.Response, err error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return nil, err
+		return
+	}
+	r.setAuthHeader(req)
+	return httpClient.Do(req)
+}
+
+func (r *Route) delete(url string) (resp *http.Response, err error) {
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		return
 	}
 	r.setAuthHeader(req)
 	return httpClient.Do(req)
@@ -224,7 +251,7 @@ func (r *Route) get(url string) (resp *http.Response, err error) {
 func (r *Route) getWithContext(ctx context.Context, url string) (resp *http.Response, err error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, err
+		return
 	}
 	r.setAuthHeader(req)
 	return httpClient.Do(req)
@@ -234,7 +261,7 @@ func (r *Route) getWithContext(ctx context.Context, url string) (resp *http.Resp
 func (r *Route) post(url, contentType string, body io.Reader) (resp *http.Response, err error) {
 	req, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
-		return nil, err
+		return
 	}
 	r.setAuthHeader(req)
 	req.Header.Set("Content-Type", contentType)
@@ -245,7 +272,7 @@ func (r *Route) post(url, contentType string, body io.Reader) (resp *http.Respon
 func (r *Route) postWithContext(ctx context.Context, url, contentType string, body io.Reader) (resp *http.Response, err error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
 	if err != nil {
-		return nil, err
+		return
 	}
 	r.setAuthHeader(req)
 	req.Header.Set("Content-Type", contentType)
