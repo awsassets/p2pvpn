@@ -39,13 +39,13 @@ func NewAPIService(router *gin.Engine, tab *Table, addr, secret string) *APIServ
 
 // RegisterHandler registers api service handlers to router.
 func (a *APIService) RegisterHandler() {
-	a.router.GET(constant.RoutingUrl+":id", a.GetNode)
-	a.router.POST(constant.RoutingUrl+":cid", a.NewNode)
+	a.router.GET(constant.RoutingUrl+":id", a.GetPeer)
+	a.router.POST(constant.RoutingUrl+":cid", a.NewPeer)
 
 	a.router.GET(constant.RoutingProviderUrl+":cid", a.GetProvider)
 
-	a.router.GET(constant.FingerprintsUrl+":fingerprint", a.GetNodeID)
-	a.router.DELETE(constant.FingerprintsUrl+":fingerprint", a.DeleteNode)
+	a.router.GET(constant.FingerprintsUrl+":fingerprint", a.GetPeerID)
+	a.router.DELETE(constant.FingerprintsUrl+":fingerprint", a.DeletePeer)
 
 	a.router.GET(constant.ServerIDUrl, a.GetServerID)
 	a.router.POST(constant.ServerIDUrl+":id", a.SetServerID)

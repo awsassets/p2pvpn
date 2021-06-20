@@ -9,8 +9,8 @@ import (
 	"github.com/libp2p/go-libp2p-core/peer"
 )
 
-// GetNode returns node information by node id.
-func (a *APIService) GetNode(c *gin.Context) {
+// GetPeer returns peer information by peer id.
+func (a *APIService) GetPeer(c *gin.Context) {
 	id, err := peer.Decode(c.Param("id"))
 	if err != nil {
 		falseResponse(http.StatusInternalServerError, c)
@@ -27,8 +27,8 @@ func (a *APIService) GetNode(c *gin.Context) {
 	}
 }
 
-// NewNode creates node entry by cid and id.
-func (a *APIService) NewNode(c *gin.Context) {
+// NewPeer creates peer entry by cid and peer id.
+func (a *APIService) NewPeer(c *gin.Context) {
 	addrs := c.PostForm("addrs")
 	cid := c.Param("cid")
 	fingerprint := c.PostForm("fingerprint")
@@ -55,8 +55,8 @@ func (a *APIService) NewNode(c *gin.Context) {
 	}
 }
 
-// DeleteNode delete node entry.
-func (a *APIService) DeleteNode(c *gin.Context) {
+// DeletePeer delete peer entry.
+func (a *APIService) DeletePeer(c *gin.Context) {
 	fingerprint := c.Param("fingerprint")
 	err := a.tab.Delete(fingerprint)
 	if err != nil {
@@ -68,7 +68,7 @@ func (a *APIService) DeleteNode(c *gin.Context) {
 	})
 }
 
-// GetProvider returns all nodes under the same provider.
+// GetProvider returns all peers under the same provider.
 func (a *APIService) GetProvider(c *gin.Context) {
 	cid := c.Param("cid")
 	pmap, err := a.tab.FindProvider(cid)
@@ -82,8 +82,8 @@ func (a *APIService) GetProvider(c *gin.Context) {
 	}
 }
 
-// GetNodeID returns peer id by fingerprint.
-func (a *APIService) GetNodeID(c *gin.Context) {
+// GetPeerID returns peer id by fingerprint.
+func (a *APIService) GetPeerID(c *gin.Context) {
 	fingerprint := c.Param("fingerprint")
 	id := a.tab.FindPeerID(fingerprint)
 	var status int
