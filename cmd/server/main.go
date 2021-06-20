@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/lp2p/p2pvpn/core"
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,6 +10,8 @@ import (
 
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/libp2p/go-libp2p/p2p/host/relay"
+	"github.com/lp2p/p2pvpn/constant"
+	"github.com/lp2p/p2pvpn/core"
 	"github.com/lp2p/p2pvpn/log"
 	"github.com/lp2p/p2pvpn/server"
 )
@@ -25,7 +26,7 @@ func main() {
 	log.SetAllLoggers(logging.LevelWarn)
 
 	apiPort := flag.Int("api-port", 8000, "api service port")
-	secret := flag.String("secret", "p2pvpn", "api auth secret")
+	secret := flag.String("secret", constant.DefaultSecret, "api auth secret")
 	flag.Parse()
 
 	api := server.NewDefaultAPIService(fmt.Sprintf(":%d", *apiPort), *secret)

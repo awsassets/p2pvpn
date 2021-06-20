@@ -93,6 +93,9 @@ func (e *engine) initServerUrl() error {
 	}
 
 	e.secret = serverUrl.User.Username()
+	if e.secret == "" {
+		e.secret = constant.DefaultSecret
+	}
 	e.ServerUrl = fmt.Sprintf("%s://%s", serverUrl.Scheme, serverUrl.Host)
 
 	return nil
