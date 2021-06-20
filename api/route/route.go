@@ -169,8 +169,9 @@ func (r *Route) Logout(fingerprint string) error {
 		return err
 	}
 	if !respPtr.Status {
-		return fmt.Errorf("fail to delete")
+		return fmt.Errorf("Fail to logout")
 	}
+	log.Infof("Logout successfully!")
 	return nil
 }
 
